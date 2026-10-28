@@ -47,28 +47,27 @@ class _LicenseManagementPageState
     },
   ];
 
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final bool isMobile = constraints.maxWidth < 700;
+ @override
+Widget build(BuildContext context) {
+  return LayoutBuilder(
+    builder: (context, constraints) {
+      final bool isMobile = constraints.maxWidth < 700;
 
-        return Column(
+      return SingleChildScrollView(
+        child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildHeader(isMobile),
             const SizedBox(height: 12),
-
             _buildStatistics(isMobile),
-
             const SizedBox(height: 14),
-
             _buildLicenseSection(isMobile),
           ],
-        );
-      },
-    );
-  }
+        ),
+      );
+    },
+  );
+}
 
   // ============================================================
   // HEADER

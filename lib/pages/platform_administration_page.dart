@@ -1,297 +1,342 @@
+
 import 'package:flutter/material.dart';
 
-class PlatformAdministrationPage extends StatelessWidget {
+class PlatformAdministrationPage extends StatefulWidget {
   const PlatformAdministrationPage({super.key});
 
-  static const Color primaryBlue = Color(0xFF1769FF);
+  @override
+  State<PlatformAdministrationPage> createState() =>
+      _PlatformAdministrationPageState();
+}
 
-  // Below this width the page uses the phone layout:
-  //  - Refresh button shows only the icon
-  //  - Management cards sit 2 across (title only)
+class _PlatformAdministrationPageState
+    extends State<PlatformAdministrationPage> {
+  static const Color primaryBlue = Color(0xFF1769FF);
+  static const Color greenColor = Color(0xFF16A36A);
   static const double phoneWidth = 550;
 
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // ======================================================
-        // HEADER
-        // ======================================================
+  final List<_ManagementItem> managementItems = const [
+    _ManagementItem(
+      'Super Admin Dashboard',
+      'Platform status, KPIs, system health and recent admin activity.',
+      Icons.dashboard_outlined,
+    ),
+    _ManagementItem(
+      'Global Dashboard',
+      'Platform-wide KPIs across every organization.',
+      Icons.public_outlined,
+    ),
+    _ManagementItem(
+      'Platform Configuration',
+      'Platform name, timezone, session limits and environment defaults.',
+      Icons.settings_outlined,
+    ),
+    _ManagementItem(
+      'Platform Branding',
+      'Logo, brand colors, login background and custom domain.',
+      Icons.palette_outlined,
+    ),
+    _ManagementItem(
+      'Feature Management',
+      'Manage features and rollout percentages across tenants.',
+      Icons.extension_outlined,
+    ),
+    _ManagementItem(
+      'Platform Health Overview',
+      'Monitor authentication, APIs, database and storage.',
+      Icons.monitor_heart_outlined,
+    ),
+    _ManagementItem(
+      'License Management',
+      'Manage license status, seat usage and renewal dates.',
+      Icons.description_outlined,
+    ),
+    _ManagementItem(
+      'Settings',
+      'Platform defaults, security policies and notifications.',
+      Icons.apps_outlined,
+    ),
+  ];
 
-        LayoutBuilder(
-          builder: (context, constraints) {
-            final bool phone = constraints.maxWidth < phoneWidth;
+  final List<_ManagementItem> organizationItems = const [
+    _ManagementItem(
+      'Company Setup',
+      'Business units, departments, branches and legal entity details.',
+      Icons.business_outlined,
+    ),
+    _ManagementItem(
+      'User Management',
+      'Invite, deactivate and manage organization users.',
+      Icons.people_alt_outlined,
+    ),
+  ];
 
-            return Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Platform Administration',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: Color(0xFF6B7487),
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      SizedBox(height: 6),
-                      Text(
-                        'Platform Administration',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFF172033),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 12),
-                if (phone)
-                  // Phone: icon-only refresh button
-                  OutlinedButton(
-                    onPressed: () {},
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: const Color(0xFF354258),
-                      side: const BorderSide(color: Color(0xFFC9D0DD)),
-                      minimumSize: const Size(40, 40),
-                      padding: EdgeInsets.zero,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: const Icon(Icons.refresh, size: 18),
-                  )
-                else
-                  OutlinedButton.icon(
-                    onPressed: () {},
-                    icon: const Icon(Icons.refresh, size: 16),
-                    label: const Text('Refresh'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: const Color(0xFF354258),
-                      side: const BorderSide(color: Color(0xFFC9D0DD)),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 11,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                  ),
-              ],
-            );
-          },
+  Widget _menuButton() {
+    return Container(
+      width: 44,
+      height: 44,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: const Color(0xFFD5DBE7),
         ),
-
-        const SizedBox(height: 24),
-
-        // ======================================================
-        // OVERVIEW CARDS  (4 across / 2 across / 1 across on phone)
-        // ======================================================
-
-        LayoutBuilder(
-          builder: (context, constraints) {
-            final width = constraints.maxWidth;
-
-            int columns = 4;
-            if (width < 900) columns = 2;
-            if (width < phoneWidth) columns = 1;
-
-            final cardWidth = (width - ((columns - 1) * 14)) / columns;
-
-            return Wrap(
-              spacing: 14,
-              runSpacing: 14,
-              children: [
-                SizedBox(
-                  width: cardWidth,
-                  child: _statCard(
-                    title: 'ORGANIZATIONS',
-                    value: '1,842',
-                    subtitle: '↑ 4.2% this month',
-                    icon: Icons.apartment_outlined,
-                  ),
-                ),
-                SizedBox(
-                  width: cardWidth,
-                  child: _statCard(
-                    title: 'TOTAL USERS',
-                    value: '96,412',
-                    subtitle: '↑ 1.8% this month',
-                    icon: Icons.people_outline,
-                  ),
-                ),
-                SizedBox(
-                  width: cardWidth,
-                  child: _statCard(
-                    title: 'LICENSES ACTIVE',
-                    value: '2,140',
-                    subtitle: '27 expiring < 30 days',
-                    icon: Icons.description_outlined,
-                  ),
-                ),
-                SizedBox(
-                  width: cardWidth,
-                  child: _uptimeCard(),
-                ),
-              ],
-            );
-          },
+      ),
+      child: IconButton(
+        tooltip: 'Menu',
+        onPressed: () {
+          final scaffold = Scaffold.maybeOf(context);
+          if (scaffold != null && scaffold.hasDrawer) {
+            scaffold.openDrawer();
+          }
+        },
+        icon: const Icon(
+          Icons.menu,
+          color: Color(0xFF202A3A),
+          size: 22,
         ),
-
-        const SizedBox(height: 28),
-
-        // ======================================================
-        // SUPER ADMIN MANAGEMENT
-        // ======================================================
-
-        _sectionTitle('SUPER ADMIN MANAGEMENT'),
-
-        const SizedBox(height: 14),
-
-        LayoutBuilder(
-          builder: (context, constraints) {
-            final width = constraints.maxWidth;
-            final bool phone = width < phoneWidth;
-
-            // Big screen: 3 across. Tablet: 2 across with description.
-            // Phone: 2 across, title only (like the reference photo).
-            int columns = 3;
-            if (width < 850) columns = 2;
-
-            final double gap = phone ? 10 : 18;
-            final cardWidth = (width - ((columns - 1) * gap)) / columns;
-
-            // Same order as the reference photo.
-            const items = [
-              _ManagementItem(
-                'Super Admin Dashboard',
-                'Platform status, KPIs, system health, and recent admin activity at a glance.',
-                Icons.grid_view_outlined,
-              ),
-              _ManagementItem(
-                'Global Dashboard',
-                'Platform-wide KPIs across every organization, tenants by plan, onboarding trends.',
-                Icons.public_outlined,
-              ),
-              _ManagementItem(
-                'Platform Configuration',
-                'Platform name, timezone, session limits, upload size, and environment defaults.',
-                Icons.settings_outlined,
-              ),
-              _ManagementItem(
-                'Platform Branding',
-                'Logo, brand colors, login background and custom domain for the platform itself.',
-                Icons.palette_outlined,
-              ),
-              _ManagementItem(
-                'Feature Management',
-                'Roll features out by plan tier, and track rollout percentage across tenants.',
-                Icons.extension_outlined,
-              ),
-              _ManagementItem(
-                'Platform Health Overview',
-                'Live status per service — auth, API gateway, database, queues, storage, AI engine.',
-                Icons.monitor_heart_outlined,
-              ),
-              _ManagementItem(
-                'License Management',
-                'Seat usage, renewal dates, and license status across every organization.',
-                Icons.description_outlined,
-              ),
-              _ManagementItem(
-                'Settings',
-                'Platform behavior toggles, regional defaults, security policy and notifications.',
-                Icons.apps_outlined,
-              ),
-            ];
-
-            return Wrap(
-              spacing: gap,
-              runSpacing: phone ? 6 : 18,
-              children: [
-                for (final item in items)
-                  SizedBox(
-                    width: cardWidth,
-                    child: _managementCard(item, compact: phone),
-                  ),
-              ],
-            );
-          },
-        ),
-
-        const SizedBox(height: 30),
-
-        // ======================================================
-        // ORGANIZATION  (one per row on phone, with description)
-        // ======================================================
-
-        _sectionTitle('ORGANIZATION'),
-
-        const SizedBox(height: 14),
-
-        LayoutBuilder(
-          builder: (context, constraints) {
-            final width = constraints.maxWidth;
-
-            final cardWidth = width < 650 ? width : (width - 18) / 2;
-
-            return Wrap(
-              spacing: 18,
-              runSpacing: 10,
-              children: [
-                SizedBox(
-                  width: cardWidth,
-                  child: _managementCard(
-                    const _ManagementItem(
-                      'Company Setup',
-                      'Business units, departments, branches, and legal entity details.',
-                      Icons.business_outlined,
-                    ),
-                  ),
-                ),
-                SizedBox(
-                  width: cardWidth,
-                  child: _managementCard(
-                    const _ManagementItem(
-                      'User Management',
-                      'Invite, deactivate and manage roles for every user across the organization.',
-                      Icons.people_alt_outlined,
-                    ),
-                  ),
-                ),
-              ],
-            );
-          },
-        ),
-
-        const SizedBox(height: 30),
-      ],
+      ),
     );
   }
 
-  // ============================================================
-  // STAT CARD
-  // ============================================================
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final phone = constraints.maxWidth < phoneWidth;
 
-  Widget _statCard({
-    required String title,
-    required String value,
-    required String subtitle,
-    required IconData icon,
-  }) {
+        return SingleChildScrollView(
+          padding: EdgeInsets.all(phone ? 14 : 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Mobile menu button
+              if (phone) ...[
+                _menuButton(),
+                const SizedBox(height: 20),
+              ],
+
+              // Breadcrumb
+              RichText(
+                text: const TextSpan(
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  children: [
+                    TextSpan(
+                      text: 'Platform Administration',
+                      style: TextStyle(
+                        color: Color(0xFF6B7487),
+                      ),
+                    ),
+                    TextSpan(
+                      text: '  /  ',
+                      style: TextStyle(
+                        color: Color(0xFF6B7487),
+                      ),
+                    ),
+                    TextSpan(
+                      text: 'Dashboard',
+                      style: TextStyle(
+                        color: Color(0xFF172033),
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 10),
+
+              // Welcome heading
+              const Text(
+                'Welcome back, Sriram',
+                style: TextStyle(
+                  fontSize: 21,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF172033),
+                ),
+              ),
+
+              const SizedBox(height: 5),
+
+              const Text(
+                'Monitor your platform and manage your organization.',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Color(0xFF6B7487),
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              _sectionTitle('PLATFORM OVERVIEW'),
+
+              const SizedBox(height: 12),
+
+              // Platform overview cards
+              LayoutBuilder(
+                builder: (context, box) {
+                  final width = box.maxWidth;
+
+                  final columns = width < phoneWidth
+                      ? 1
+                      : width < 900
+                          ? 2
+                          : 3;
+
+                  final cardWidth =
+                      (width - (columns - 1) * 14) / columns;
+
+                  return Wrap(
+                    spacing: 14,
+                    runSpacing: 14,
+                    children: [
+                      SizedBox(
+                        width: cardWidth,
+                        child: _statCard(
+                          'TOTAL USERS',
+                          '96,412',
+                          '↑ 1.8% this month',
+                          Icons.people_outline,
+                        ),
+                      ),
+                      SizedBox(
+                        width: cardWidth,
+                        child: _statCard(
+                          'ACTIVE USERS',
+                          '78,930',
+                          '4,215 online now',
+                          Icons.wifi_tethering_outlined,
+                        ),
+                      ),
+                      SizedBox(
+                        width: cardWidth,
+                        child: _statCard(
+                          'ORGANIZATIONS',
+                          '1,842',
+                          '↑ 4.2% this month',
+                          Icons.apartment_outlined,
+                        ),
+                      ),
+                      SizedBox(
+                        width: cardWidth,
+                        child: _statCard(
+                          'LICENSES ACTIVE',
+                          '2,140',
+                          '27 expiring < 30 days',
+                          Icons.description_outlined,
+                        ),
+                      ),
+                      SizedBox(
+                        width: cardWidth,
+                        child: _uptimeCard(),
+                      ),
+                    ],
+                  );
+                },
+              ),
+
+              const SizedBox(height: 28),
+
+              // Super Admin Management
+              _sectionTitle('SUPER ADMIN MANAGEMENT'),
+
+              const SizedBox(height: 12),
+
+              LayoutBuilder(
+                builder: (context, box) {
+                  final width = box.maxWidth;
+                  final columns = width < 850 ? 2 : 3;
+                  final gap = phone ? 8.0 : 14.0;
+
+                  final cardWidth =
+                      (width - (columns - 1) * gap) / columns;
+
+                  return Wrap(
+                    spacing: gap,
+                    runSpacing: 10,
+                    children: [
+                      for (final item in managementItems)
+                        SizedBox(
+                          width: cardWidth,
+                          child: _managementCard(
+                            item,
+                            compact: phone,
+                          ),
+                        ),
+                    ],
+                  );
+                },
+              ),
+
+              const SizedBox(height: 28),
+
+              // Organization
+              _sectionTitle('ORGANIZATION'),
+
+              const SizedBox(height: 12),
+
+              LayoutBuilder(
+                builder: (context, box) {
+                  final width = box.maxWidth;
+
+                  final cardWidth = width < 650
+                      ? width
+                      : (width - 14) / 2;
+
+                  return Wrap(
+                    spacing: 14,
+                    runSpacing: 10,
+                    children: [
+                      for (final item in organizationItems)
+                        SizedBox(
+                          width: cardWidth,
+                          child: _managementCard(item),
+                        ),
+                    ],
+                  );
+                },
+              ),
+
+              const SizedBox(height: 10),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // Section heading
+  Widget _sectionTitle(String title) {
+    return Text(
+      title,
+      style: const TextStyle(
+        fontSize: 11,
+        fontWeight: FontWeight.w800,
+        color: Color(0xFF6B7487),
+        letterSpacing: 0.8,
+      ),
+    );
+  }
+
+  // Statistics card
+  Widget _statCard(
+    String title,
+    String value,
+    String subtitle,
+    IconData icon,
+  ) {
     return Container(
-      height: 105,
+      height: 112,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFFD5DBE7)),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: const Color(0xFFD5DBE7),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -299,16 +344,21 @@ class PlatformAdministrationPage extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w800,
-                  color: Color(0xFF5A6479),
-                  letterSpacing: 0.5,
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF5A6479),
+                  ),
                 ),
               ),
-              Icon(icon, size: 17, color: primaryBlue),
+              Icon(
+                icon,
+                size: 19,
+                color: primaryBlue,
+              ),
             ],
           ),
           const Spacer(),
@@ -326,7 +376,7 @@ class PlatformAdministrationPage extends StatelessWidget {
             style: const TextStyle(
               fontSize: 10.5,
               fontWeight: FontWeight.w600,
-              color: Color(0xFF16A36A),
+              color: greenColor,
             ),
           ),
         ],
@@ -334,24 +384,19 @@ class PlatformAdministrationPage extends StatelessWidget {
     );
   }
 
-  // ============================================================
-  // PLATFORM UPTIME
-  // ============================================================
-
+  // Platform uptime card
   Widget _uptimeCard() {
     return Container(
-      height: 105,
+      height: 112,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
           colors: [
             Color(0xFF1769FF),
             Color(0xFF1045B8),
           ],
         ),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -365,13 +410,11 @@ class PlatformAdministrationPage extends StatelessWidget {
                   color: Colors.white,
                   fontSize: 10,
                   fontWeight: FontWeight.w800,
-                  letterSpacing: 0.5,
                 ),
               ),
               Icon(
                 Icons.monitor_heart_outlined,
                 color: Colors.white,
-                size: 18,
               ),
             ],
           ),
@@ -390,7 +433,6 @@ class PlatformAdministrationPage extends StatelessWidget {
             style: TextStyle(
               color: Colors.white,
               fontSize: 10.5,
-              fontWeight: FontWeight.w600,
             ),
           ),
         ],
@@ -398,48 +440,38 @@ class PlatformAdministrationPage extends StatelessWidget {
     );
   }
 
-  // ============================================================
-  // SECTION TITLE
-  // ============================================================
-
-  Widget _sectionTitle(String title) {
-    return Text(
-      title,
-      style: const TextStyle(
-        fontSize: 10.5,
-        fontWeight: FontWeight.w800,
-        color: Color(0xFF6B7487),
-        letterSpacing: 0.8,
-      ),
-    );
-  }
-
-  // ============================================================
-  // MANAGEMENT CARD
-  // compact = true  -> icon + title only (phone grid)
-  // compact = false -> icon + title + description
-  // ============================================================
-
+  // Management cards
   Widget _managementCard(
     _ManagementItem item, {
     bool compact = false,
   }) {
     return InkWell(
       borderRadius: BorderRadius.circular(10),
-      onTap: () {},
+      onTap: () {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${item.title} selected'),
+          ),
+        );
+      },
       child: Container(
-        constraints: BoxConstraints(minHeight: compact ? 84 : 105),
+        constraints: BoxConstraints(
+          minHeight: compact ? 90 : 125,
+        ),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Colors.transparent,
+          color: Colors.white,
           borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: const Color(0xFFE1E6EF),
+          ),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-              width: compact ? 34 : 30,
-              height: compact ? 34 : 30,
+              width: 36,
+              height: 36,
               decoration: BoxDecoration(
                 color: const Color(0xFFEAF1FF),
                 borderRadius: BorderRadius.circular(8),
@@ -447,20 +479,20 @@ class PlatformAdministrationPage extends StatelessWidget {
               child: Icon(
                 item.icon,
                 color: primaryBlue,
-                size: compact ? 19 : 17,
+                size: 20,
               ),
             ),
             const SizedBox(height: 10),
             Text(
               item.title,
-              style: TextStyle(
-                fontSize: compact ? 12.5 : 12,
+              style: const TextStyle(
+                fontSize: 12.5,
                 fontWeight: FontWeight.w700,
-                color: const Color(0xFF202A3A),
+                color: Color(0xFF202A3A),
               ),
             ),
             if (!compact) ...[
-              const SizedBox(height: 5),
+              const SizedBox(height: 6),
               Text(
                 item.description,
                 maxLines: 3,
@@ -479,10 +511,7 @@ class PlatformAdministrationPage extends StatelessWidget {
   }
 }
 
-// ============================================================
-// DATA CLASS
-// ============================================================
-
+// Management item model
 class _ManagementItem {
   final String title;
   final String description;
@@ -494,3 +523,4 @@ class _ManagementItem {
     this.icon,
   );
 }
+

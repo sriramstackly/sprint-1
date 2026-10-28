@@ -1,5 +1,21 @@
 import 'package:flutter/material.dart';
 
+import 'export_feature_report_page.dart';
+import 'feature_flow_pages.dart';
+
+// ============================================================
+// WHAT'S NEW
+//
+//   Tap "Disable" → "Disable Feature" dialog (red warning box)
+//                    → [Disable Feature] → toast "Feature Disabled"
+//   Tap "Enable"  → "Enable Feature" dialog (green check)
+//                    → [Enable Feature]  → toast "Feature Enabled"
+//
+//   Cancel / the ✕ button / tapping outside the dialog closes it
+//   and changes nothing. The feature only switches after the
+//   person confirms.
+// ============================================================
+
 class FeatureManagementPage extends StatefulWidget {
   const FeatureManagementPage({super.key});
 
@@ -54,6 +70,178 @@ class _FeatureManagementPageState
   void dispose() {
     searchController.dispose();
     super.dispose();
+  }
+
+  // ============================================================
+  // ENABLE / DISABLE WITH CONFIRMATION
+  //   1. ask in a dialog
+  //   2. only if confirmed → switch the feature
+  //   3. show the "Feature Enabled / Disabled" toast
+  // ============================================================
+
+  Future<void> _confirmToggle(
+    Map<String, dynamic> feature,
+  ) async {
+    final bool isEnabled = feature['enabled'] as bool;
+    final String name = feature['name'] as String;
+    final String license = feature['license'] as String;
+
+    final bool? confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return _ToggleFeatureDialog(
+          name: name,
+          license: license,
+          // The feature is enabled now, so the action is "disable".
+          disabling: isEnabled,
+        );
+      },
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    setState(() {
+      feature['enabled'] = !isEnabled;
+    });
+
+    // TODO: call your API here to really enable / disable the feature.
+
+    _showToggleToast(name, !isEnabled);
+  }
+
+  void _showToggleToast(String name, bool nowEnabled) {
+    final Color color = nowEnabled
+        ? const Color(0xFF18A957)
+        : const Color(0xFFE74A4A);
+
+    final messenger = ScaffoldMessenger.of(context);
+
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          padding: EdgeInsets.zero,
+          margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          duration: const Duration(seconds: 3),
+          content: DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x26000000),
+                  blurRadius: 10,
+                  offset: Offset(0, 3),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Container(
+                color: Colors.white,
+                child: IntrinsicHeight(
+                  child: Row(
+                    crossAxisAlignment:
+                        CrossAxisAlignment.stretch,
+                    children: [
+                      // colored left bar
+                      Container(width: 4, color: color),
+
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 11,
+                          ),
+                          child: Row(
+                            crossAxisAlignment:
+                                CrossAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.check_circle_outline,
+                                size: 22,
+                                color: color,
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      nowEnabled
+                                          ? 'Feature Enabled'
+                                          : 'Feature Disabled',
+                                      style: const TextStyle(
+                                        fontSize: 12.5,
+                                        fontWeight: FontWeight.w700,
+                                        color: Color(0xFF172033),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      nowEnabled
+                                          ? "'$name' has been activated across the platform."
+                                          : "'$name' has been deactivated across the platform.",
+                                      style: const TextStyle(
+                                        fontSize: 11,
+                                        height: 1.35,
+                                        color: Color(0xFF7A8490),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+  }
+
+  // ============================================================
+  // CONFIGURE / USAGE NAVIGATION
+  //
+  //   Configure → Configure Feature page
+  //               → [Save Changes] → Organization Access page
+  //               → [Save Changes] → Feature Usage Monitoring page
+  //   Usage     → Feature Usage Monitoring page
+  //
+  //   Every page edits the same `feature` map and calls onSaved,
+  //   so the list refreshes after each save.
+  // ============================================================
+
+  void _openConfigure(Map<String, dynamic> feature) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ConfigureFeaturePage(
+          feature: feature,
+          onSaved: () {
+            if (mounted) setState(() {});
+          },
+        ),
+      ),
+    );
+  }
+
+  void _openUsage(Map<String, dynamic> feature) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => FeatureUsagePage(feature: feature),
+      ),
+    );
   }
 
   // ============================================================
@@ -745,7 +933,7 @@ class _FeatureManagementPageState
                 child: _smallAction(
                   Icons.tune,
                   'Configure',
-                  () {},
+                  () => _openConfigure(feature),
                 ),
               ),
 
@@ -755,7 +943,7 @@ class _FeatureManagementPageState
                 child: _smallAction(
                   Icons.bar_chart_outlined,
                   'Usage',
-                  () {},
+                  () => _openUsage(feature),
                 ),
               ),
 
@@ -818,7 +1006,8 @@ class _FeatureManagementPageState
   }
 
   // ============================================================
-  // ENABLE / DISABLE
+  // ENABLE / DISABLE BUTTON
+  //   Opens the confirmation dialog (see _confirmToggle).
   // ============================================================
 
   Widget _enableButton(
@@ -830,12 +1019,7 @@ class _FeatureManagementPageState
     return SizedBox(
       height: 25,
       child: OutlinedButton(
-        onPressed: () {
-          setState(() {
-            feature['enabled'] =
-                !feature['enabled'];
-          });
-        },
+        onPressed: () => _confirmToggle(feature),
         style:
             OutlinedButton.styleFrom(
           padding:
@@ -1065,13 +1249,13 @@ class _FeatureManagementPageState
             child: _smallAction(
               Icons.tune,
               'Configure',
-              () {},
+                  () => _openConfigure(feature),
             ),
           ),
 
           Expanded(
             child: TextButton(
-              onPressed: () {},
+              onPressed: () => _openUsage(feature),
               child: const Text(
                 'Usage',
                 style:
@@ -1205,13 +1389,13 @@ class _FeatureManagementPageState
       width: double.infinity,
       height: 32,
       child: ElevatedButton.icon(
+        // Opens the "Export Feature Management Report" page.
         onPressed: () {
-          ScaffoldMessenger.of(
+          Navigator.push(
             context,
-          ).showSnackBar(
-            const SnackBar(
-              content: Text(
-                'Feature report exported',
+            MaterialPageRoute(
+              builder: (_) => ExportFeatureReportPage(
+                features: features,
               ),
             ),
           );
@@ -1263,6 +1447,293 @@ class _HeaderText extends StatelessWidget {
         fontWeight: FontWeight.w600,
         color: Colors.white,
         letterSpacing: 0.2,
+      ),
+    );
+  }
+}
+
+// ================================================================
+// ENABLE / DISABLE CONFIRMATION DIALOG
+//
+//   disabling = true   → red warning icon, red "Warning: Interruption
+//                        of Service" box, red [Disable Feature] button
+//   disabling = false  → green check icon, plain question text,
+//                        green [Enable Feature] button
+//
+//   Pops true when the person confirms, false / null otherwise.
+// ================================================================
+
+class _ToggleFeatureDialog extends StatelessWidget {
+  final String name;
+  final String license;
+  final bool disabling;
+
+  const _ToggleFeatureDialog({
+    required this.name,
+    required this.license,
+    required this.disabling,
+  });
+
+  static const Color _red = Color(0xFFD93F3F);
+  static const Color _green = Color(0xFF3FAE5A);
+  static const Color _textStrong = Color(0xFF172033);
+  static const Color _textSoft = Color(0xFF7A8490);
+
+  @override
+  Widget build(BuildContext context) {
+    final Color accent = disabling ? _red : _green;
+
+    return Dialog(
+      backgroundColor: Colors.white,
+      surfaceTintColor: Colors.transparent,
+      insetPadding: const EdgeInsets.symmetric(
+        horizontal: 20,
+        vertical: 24,
+      ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 380),
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(18),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ---------------- HEADER ----------------
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _iconBox(),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment:
+                            CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 2),
+                          Text(
+                            disabling
+                                ? 'Disable Feature'
+                                : 'Enable Feature',
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              color: _textStrong,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 11.5,
+                              color: _textSoft,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    InkWell(
+                      onTap: () => Navigator.of(context).pop(false),
+                      customBorder: const CircleBorder(),
+                      child: Container(
+                        width: 24,
+                        height: 24,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: const Color(0xFFD5DAE2),
+                          ),
+                        ),
+                        child: const Icon(
+                          Icons.close,
+                          size: 13,
+                          color: _textSoft,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 16),
+
+                // ---------------- BODY ----------------
+                if (disabling)
+                  _warningBox()
+                else
+                  _enableText(),
+
+                const SizedBox(height: 20),
+
+                // ---------------- BUTTONS ----------------
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () =>
+                          Navigator.of(context).pop(false),
+                      style: TextButton.styleFrom(
+                        foregroundColor: _textStrong,
+                        minimumSize: const Size(72, 40),
+                      ),
+                      child: const Text(
+                        'Cancel',
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      onPressed: () =>
+                          Navigator.of(context).pop(true),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: accent,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        minimumSize: const Size(0, 40),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 18,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                      ),
+                      child: Text(
+                        disabling
+                            ? 'Disable Feature'
+                            : 'Enable Feature',
+                        style: const TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Red warning icon (disable) / green check icon (enable).
+  Widget _iconBox() {
+    if (disabling) {
+      return Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: const Color(0xFFFDECEC),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: const Color(0xFFF3C6C6)),
+        ),
+        child: const Icon(
+          Icons.warning_amber_rounded,
+          size: 22,
+          color: _red,
+        ),
+      );
+    }
+
+    return Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        color: _green,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: const Icon(
+        Icons.check_circle_outline,
+        size: 22,
+        color: Colors.white,
+      ),
+    );
+  }
+
+  // Red box: "Warning: Interruption of Service ..."
+  Widget _warningBox() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFDF1F1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFFF3D3D3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Warning: Interruption of Service',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFFB42318),
+            ),
+          ),
+          const SizedBox(height: 6),
+          RichText(
+            text: TextSpan(
+              style: const TextStyle(
+                fontSize: 11.5,
+                height: 1.5,
+                color: Color(0xFFB4463F),
+              ),
+              children: [
+                const TextSpan(text: 'Disabling '),
+                TextSpan(
+                  text: '"$name"',
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+                const TextSpan(
+                  text:
+                      ' will immediately revoke access across all active tenant workspaces. '
+                      'Any active API calls, background jobs, or user sessions relying on '
+                      'this feature will be halted.',
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Plain question text for "Enable Feature".
+  Widget _enableText() {
+    return RichText(
+      text: TextSpan(
+        style: const TextStyle(
+          fontSize: 12,
+          height: 1.5,
+          color: Color(0xFF354258),
+        ),
+        children: [
+          const TextSpan(
+            text: 'Are you sure you want to enable the ',
+          ),
+          TextSpan(
+            text: '"$name"',
+            style: const TextStyle(
+              fontWeight: FontWeight.w700,
+              color: _textStrong,
+            ),
+          ),
+          TextSpan(
+            text:
+                ' feature? This will immediately make it accessible to all '
+                'tenant organizations on the $license plan.',
+          ),
+        ],
       ),
     );
   }

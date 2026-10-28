@@ -7,29 +7,33 @@ import 'feature_management_page.dart';
 import 'license_management_page.dart';
 import 'platform_health_overview_page.dart';
 import 'global_settings_page.dart';
+import 'notification_page.dart';
 
 /// ============================================================
 /// LOGO IMAGE
 /// ============================================================
-/// The Stackly logo is loaded from:
-///   assets/icons/stackly.img.png
+/// Two logo files are used (both must be listed in pubspec.yaml):
+///   assets/icons/stackly.img.png     -> inside the dark side menu
+///   assets/icons/stacklyone.img.png  -> in the top bar (phone + desktop)
 ///
-/// Your pubspec.yaml already lists it:
 ///   flutter:
 ///     assets:
+///       - assets/icons/image.png
 ///       - assets/icons/stackly.img.png
-///       - assets/icons/platform_administration_logo.png
+///       - assets/icons/stacklyone.img.png
 ///
-/// If the image is missing, a plain icon is shown instead,
-/// so the app never crashes.
+/// If an image is missing, a plain icon + "STACKLY" text is shown
+/// instead, so the app never crashes.
 const String kLogoAssetPath = 'assets/icons/stackly.img.png';
+const String kTopBarLogoAssetPath = 'assets/icons/stacklyone.img.png';
 
 // ============================================================
 // LOGO SIZES  (change these two numbers to make the logo bigger
-// or smaller. The picture keeps its shape automatically.)
+// or smaller. The picture keeps its shape automatically, and on
+// very narrow phones it shrinks itself to fit.)
 // ============================================================
 const double kSidebarLogoHeight = 64; // logo inside the side menu
-const double kMobileLogoHeight = 40; // logo in the top bar on phones
+const double kMobileLogoHeight = 120; // logo in the top bar on phones
 
 class LandingPage extends StatefulWidget {
   const LandingPage({super.key});
@@ -389,16 +393,52 @@ class _LandingPageState extends State<LandingPage> {
     );
   }
 
-  // Logo picture (falls back to an icon if the file is missing).
-  Widget _logoMark({required double height, required Color fallbackColor}) {
-    return Image.asset(
-      kLogoAssetPath,
+  // Logo picture.
+  // - Wrapped in FittedBox(scaleDown) so it never overflows: on a narrow
+  //   phone it simply shrinks to fit the free space.
+  // - If the file is missing, an icon + "STACKLY" text is shown instead.
+  Widget _logoMark({
+    required double height,
+    required Color fallbackColor,
+    String asset = kLogoAssetPath,
+  }) {
+    return SizedBox(
       height: height,
-      fit: BoxFit.contain,
-      alignment: Alignment.centerLeft,
-      errorBuilder: (context, error, stackTrace) {
-        return Icon(Icons.layers_outlined, color: fallbackColor, size: height * 0.75);
-      },
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        alignment: Alignment.centerLeft,
+        child: Image.asset(
+          asset,
+          height: height,
+          fit: BoxFit.contain,
+          alignment: Alignment.centerLeft,
+          filterQuality: FilterQuality.high,
+          errorBuilder: (context, error, stackTrace) {
+            debugPrint('Stackly logo error ($asset): $error');
+
+            return Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.layers_outlined,
+                  color: fallbackColor,
+                  size: height * 0.6,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  'STACKLY',
+                  style: TextStyle(
+                    color: fallbackColor,
+                    fontSize: height * 0.32,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 1.1,
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
     );
   }
 
@@ -534,7 +574,7 @@ class _LandingPageState extends State<LandingPage> {
   }
 
   // ============================================================
-  // SIDEBAR FOOTER: LANGUAGE, LOGOUT, PROFILE
+  // SIDEBAR FOOTER: LANGUAGE, PROFILE
   // ============================================================
 
   Widget _buildSidebarFooter() {
@@ -564,23 +604,6 @@ class _LandingPageState extends State<LandingPage> {
                   ),
                   const SizedBox(width: 4),
                   const Icon(Icons.expand_more, size: 16, color: sidebarText),
-                ],
-              ),
-            ),
-          ),
-          InkWell(
-            borderRadius: BorderRadius.circular(8),
-            onTap: () => _confirmLogout(context),
-            child: const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              child: Row(
-                children: [
-                  Icon(Icons.logout_outlined, size: 18, color: sidebarText),
-                  SizedBox(width: 12),
-                  Text(
-                    'Log out',
-                    style: TextStyle(color: sidebarText, fontSize: 14, fontWeight: FontWeight.w500),
-                  ),
                 ],
               ),
             ),
@@ -638,6 +661,32 @@ class _LandingPageState extends State<LandingPage> {
     );
   }
 
+  // Round gradient avatar (teal -> blue) with the "S" letter,
+  // used in the phone top bar.
+  Widget _gradientAvatar({required double size}) {
+    return Container(
+      width: size,
+      height: size,
+      alignment: Alignment.center,
+      decoration: const BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF7FD6C2), Color(0xFF3D8FD6)],
+        ),
+      ),
+      child: Text(
+        'S',
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: size * 0.4,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
+
   void _showLanguagePicker() {
     showModalBottomSheet(
       context: context,
@@ -685,68 +734,6 @@ class _LandingPageState extends State<LandingPage> {
       ),
     );
     // TODO: open your real profile/account page.
-  }
-
-  // ============================================================
-  // LOGOUT
-  // ============================================================
-
-  Future<void> _confirmLogout(BuildContext context) async {
-    final bool? confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-          title: const Text('Log out?', style: TextStyle(fontWeight: FontWeight.w800)),
-          content: const Text(
-            'You will be signed out of the OneCloud Enterprise Platform. '
-            'Any unsaved changes may be lost.',
-            style: TextStyle(fontSize: 13, color: Color(0xFF667085)),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: redColor,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              ),
-              onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: const Text('Logout'),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (confirmed == true && mounted) {
-      _performLogout();
-    }
-  }
-
-  void _performLogout() {
-    _scaffoldKey.currentState?.closeDrawer();
-    setState(() {
-      selectedMenu = 'Super Admin Management';
-      selectedGroup = 'PLATFORM ADMINISTRATION';
-    });
-
-    // TODO: connect to your real sign-out code, for example:
-    // await AuthService.instance.signOut();
-    // Navigator.of(context).pushAndRemoveUntil(
-    //   MaterialPageRoute(builder: (_) => const LoginPage()),
-    //   (route) => false,
-    // );
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('You have been logged out.'),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
   }
 
   // ============================================================
@@ -849,15 +836,22 @@ class _LandingPageState extends State<LandingPage> {
 
     return Column(
       children: [
+        // Top bar. On phones it is a white block with a divider line
+        // under it (like the design); on desktop it keeps the page colour.
         Container(
-          color: const Color(0xFFF5F7FB),
-          padding: EdgeInsets.fromLTRB(pad, mobile ? 12 : 22, pad, mobile ? 10 : 15),
+          decoration: BoxDecoration(
+            color: mobile ? Colors.white : const Color(0xFFF5F7FB),
+            border: mobile
+                ? const Border(bottom: BorderSide(color: Color(0xFFE3E8F0)))
+                : null,
+          ),
+          padding: EdgeInsets.fromLTRB(pad, mobile ? 8 : 22, pad, mobile ? 14 : 15),
           child: mobile ? _buildMobileTopBar() : _buildTopBar(),
         ),
         Expanded(
           child: SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
-            padding: EdgeInsets.fromLTRB(pad, 4, pad, 35),
+            padding: EdgeInsets.fromLTRB(pad, mobile ? 16 : 4, pad, 35),
             child: _pageForSelectedMenu() ??
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -907,6 +901,8 @@ class _LandingPageState extends State<LandingPage> {
                         );
                       },
                     ),
+                    // (The phone "Export report" button that used to sit
+                    // below Recent login activities has been removed.)
                   ],
                 ),
           ),
@@ -977,68 +973,86 @@ class _LandingPageState extends State<LandingPage> {
   }
 
   // ============================================================
-  // TOP BAR - MOBILE (three-line button + logo + bell, search below)
+  // TOP BAR - MOBILE
+  // Row 1: menu button | STACKLY logo | bell (red dot) + "S" avatar
+  // Row 2: pill search bar
   // ============================================================
 
   Widget _buildMobileTopBar() {
     return Column(
       children: [
         Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             // THREE LINES: opens the sidebar drawer
             InkWell(
-              borderRadius: BorderRadius.circular(9),
+              borderRadius: BorderRadius.circular(12),
               onTap: () => _scaffoldKey.currentState?.openDrawer(),
               child: Container(
-                width: 40,
-                height: 40,
+                width: 44,
+                height: 44,
                 decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(9),
-                  border: Border.all(color: const Color(0xFFD5DBE7)),
+                  color: const Color(0xFFF7F9FC),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFE3E8F0)),
                 ),
-                child: const Icon(Icons.menu, color: Color(0xFF202A3A), size: 22),
+                child: const Icon(Icons.menu, color: Color(0xFF202A3A), size: 24),
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 10),
+
+            // Logo takes all the free space in the middle and
+            // shrinks automatically if the phone is very narrow.
             Expanded(
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: _logoMark(
                   height: kMobileLogoHeight,
                   fallbackColor: primaryBlue,
+                  asset: kTopBarLogoAssetPath,
                 ),
               ),
             ),
-            const SizedBox(width: 12),
-            _bellButton(),
+            const SizedBox(width: 8),
+
+            // Bell sits right beside the "S" avatar.
+            _bellButton(mobile: true),
+            const SizedBox(width: 8),
+            InkWell(
+              customBorder: const CircleBorder(),
+              onTap: _showProfileMenu,
+              child: _gradientAvatar(size: 46),
+            ),
           ],
         ),
-        const SizedBox(height: 12),
-        _searchBox(),
+        const SizedBox(height: 8),
+        _searchBox(pill: true),
       ],
     );
   }
 
-  Widget _searchBox() {
+  Widget _searchBox({bool pill = false}) {
     return Container(
-      height: 44,
+      height: pill ? 50 : 44,
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(9),
+        color: pill ? const Color(0xFFF5F7FA) : Colors.white,
+        borderRadius: BorderRadius.circular(pill ? 25 : 9),
         border: Border.all(color: const Color(0xFFD5DBE7)),
       ),
-      child: const Row(
+      child: Row(
         children: [
-          SizedBox(width: 14),
-          Icon(Icons.search, size: 19, color: Color(0xFF6B7487)),
-          SizedBox(width: 10),
+          SizedBox(width: pill ? 18 : 14),
+          Icon(Icons.search, size: pill ? 22 : 19, color: const Color(0xFF6B7487)),
+          SizedBox(width: pill ? 12 : 10),
           Expanded(
             child: Text(
               'Search tenants, users, settings...',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(color: Color(0xFF6B7487), fontSize: 12.5),
+              style: TextStyle(
+                color: const Color(0xFF6B7487),
+                fontSize: pill ? 14.5 : 12.5,
+              ),
             ),
           ),
         ],
@@ -1046,21 +1060,51 @@ class _LandingPageState extends State<LandingPage> {
     );
   }
 
-  Widget _bellButton() {
+  Widget _bellButton({bool mobile = false}) {
+    final double size = mobile ? 44 : 40;
+
     return InkWell(
-      borderRadius: BorderRadius.circular(9),
-      onTap: () => _select('Notifications', group: ''),
+      borderRadius: BorderRadius.circular(mobile ? 12 : 9),
+      
+      onTap: () {
+      Navigator.push(
+      context,
+      MaterialPageRoute(
+      builder: (context) => const NotificationPage(),
+    ),
+  );
+},
+
       child: Container(
-        width: 40,
-        height: 40,
+        width: size,
+        height: size,
         decoration: BoxDecoration(
-          color: const Color(0xFFEAF1FF),
-          borderRadius: BorderRadius.circular(9),
+          color: mobile ? const Color(0xFFF7F9FC) : const Color(0xFFEAF1FF),
+          borderRadius: BorderRadius.circular(mobile ? 12 : 9),
+          border: mobile ? Border.all(color: const Color(0xFFE3E8F0)) : null,
         ),
-        child: const Icon(
-          Icons.notifications_none_outlined,
-          color: Color(0xFF3B4C6B),
-          size: 21,
+        child: Stack(
+          alignment: Alignment.center,
+          clipBehavior: Clip.none,
+          children: [
+            Icon(
+              Icons.notifications_none_outlined,
+              color: const Color(0xFF3B4C6B),
+              size: mobile ? 23 : 21,
+            ),
+            Positioned(
+              top: mobile ? -3 : 9,
+              right: mobile ? -3 : 10,
+              child: Container(
+                width: mobile ? 8 : 7,
+                height: mobile ? 8 : 7,
+                decoration: const BoxDecoration(
+                  color: redColor,
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -1129,17 +1173,27 @@ class _LandingPageState extends State<LandingPage> {
     );
 
     if (mobile) {
-      return Column(
+      // Phone: title on the left, small refresh icon on the right.
+      return Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          titleBlock,
-          const SizedBox(height: 14),
-          Row(
-            children: [
-              Expanded(child: refreshButton),
-              const SizedBox(width: 10),
-              Expanded(child: exportButton),
-            ],
+          Expanded(child: titleBlock),
+          const SizedBox(width: 12),
+          InkWell(
+            borderRadius: BorderRadius.circular(9),
+            onTap: _handleRefresh,
+            child: Container(
+              width: 40,
+              height: 40,
+              alignment: Alignment.center,
+              child: isRefreshing
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.refresh, size: 22, color: Color(0xFF354258)),
+            ),
           ),
         ],
       );
@@ -1624,6 +1678,7 @@ class _LandingPageState extends State<LandingPage> {
   // RECENT LOGIN ACTIVITY CARD
   // ============================================================
 
+  
   Widget _buildRecentActivityCard() {
     return Container(
       width: double.infinity,
@@ -1631,11 +1686,14 @@ class _LandingPageState extends State<LandingPage> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFD5DBE7)),
+        border: Border.all(
+          color: const Color(0xFFD5DBE7),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Recent login activities heading
           const Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -1643,33 +1701,87 @@ class _LandingPageState extends State<LandingPage> {
                 child: Text(
                   'Recent login activities',
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Color(0xFF172033)),
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF172033),
+                  ),
                 ),
               ),
               SizedBox(width: 8),
-              Text('Last 24 hours', style: TextStyle(fontSize: 11, color: Color(0xFF6B7487))),
+              Text(
+                'Last 24 hours',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Color(0xFF6B7487),
+                ),
+              ),
             ],
           ),
+
           const SizedBox(height: 12),
+
+          // Recent login activity list
           for (final entry in recentLogins)
-            _activityRow(title: entry['title']!, subtitle: entry['subtitle']!, status: entry['status']!),
+            _activityRow(
+              title: entry['title']!,
+              subtitle: entry['subtitle']!,
+              status: entry['status']!,
+            ),
+
+          const SizedBox(height: 4),
+
+          // Full-width Export button
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: _handleExportReport,
+              icon: const Icon(
+                Icons.file_download_outlined,
+                size: 16,
+              ),
+              label: const Text('Export'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF172DE0),
+                foregroundColor: Colors.white,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(
+                  vertical: 13,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                textStyle: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _activityRow({required String title, required String subtitle, required String status}) {
+  Widget _activityRow({
+    required String title,
+    required String subtitle,
+    required String status,
+  }) {
     Color color;
     IconData icon;
+
     switch (status) {
       case 'danger':
         color = redColor;
         icon = Icons.error_outline;
         break;
+
       case 'warning':
         color = amberColor;
         icon = Icons.warning_amber_outlined;
         break;
+
       default:
         color = greenColor;
         icon = Icons.check_circle_outline;
@@ -1680,15 +1792,32 @@ class _LandingPageState extends State<LandingPage> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 16, color: color),
+          Icon(
+            icon,
+            size: 16,
+            color: color,
+          ),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF202A3A))),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF202A3A),
+                  ),
+                ),
                 const SizedBox(height: 2),
-                Text(subtitle, style: const TextStyle(fontSize: 10.5, color: Color(0xFF6B7487))),
+                Text(
+                  subtitle,
+                  style: const TextStyle(
+                    fontSize: 10.5,
+                    color: Color(0xFF6B7487),
+                  ),
+                ),
               ],
             ),
           ),

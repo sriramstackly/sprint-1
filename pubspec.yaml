@@ -1,3 +1,4 @@
+
 name: flutter_application_7
 
 description: "A new Flutter project."
@@ -10,13 +11,14 @@ environment:
   sdk: ^3.13.2
 
 dependencies:
+  file_picker: ^13.1.0
   flutter:
     sdk: flutter
+  flutter_colorpicker: ^1.1.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-
   flutter_lints: ^6.0.0
 
 flutter:
@@ -24,13 +26,5 @@ flutter:
 
   assets:
     - assets/icons/image.png
-    - assets/icons/platform_administration_logo.png
     - assets/icons/stackly.img.png
-    
-
-    
-
-
-
-    
-    
+    - assets/icons/stacklyone.img.png

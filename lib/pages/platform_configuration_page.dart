@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'smtp_configuration_page.dart';
+import 'sms_gateway_configuration_page.dart';
+import 'api_gateway_configuration_page.dart';
 
 class PlatformConfigurationPage extends StatefulWidget {
   const PlatformConfigurationPage({super.key});
@@ -114,14 +117,49 @@ class _PlatformConfigurationPageState
   // CONFIGURE
   // ============================================================
 
-  void _handleConfigure(String title) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Opening $title...'),
-        behavior: SnackBarBehavior.floating,
+  
+
+void _handleConfigure(String title) {
+  if (title == 'SMTP Configuration') {
+    Navigator.push(
+      context,
+      MaterialPageRoute<void>(
+        builder: (context) =>
+            const SmtpConfigurationPage(),
       ),
     );
+    return;
   }
+
+  if (title == 'SMS Gateway') {
+    Navigator.push(
+      context,
+      MaterialPageRoute<void>(
+        builder: (context) =>
+            const SmsGatewayConfigurationPage(),
+      ),
+    );
+    return;
+  }
+
+  if (title == 'API Gateway') {
+    Navigator.push(
+      context,
+      MaterialPageRoute<void>(
+        builder: (context) =>
+            const ApiGatewayConfigurationPage(),
+      ),
+    );
+    return;
+  }
+
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text('$title configuration coming soon'),
+      behavior: SnackBarBehavior.floating,
+    ),
+  );
+}
 
   // ============================================================
   // BUILD

@@ -1,3 +1,11 @@
+// NOTE ABOUT THE FIRST SCREEN (NEW)
+// ---------------------------------
+// The app opens on WelcomePage. It is drawn fully in code (logo, headline,
+// glowing ring with the "1E" badge, four cards, footer and the SIGN IN
+// button), so it does not need any picture file. Tapping SIGN IN opens the
+// login page. On the login page, the phone's back button returns to the
+// welcome page.
+//
 // NOTE ABOUT THE LOGO UPLOAD FIELD
 // ---------------------------------
 // The "Upload logo" box below is a placeholder (tapping it shows a
@@ -72,6 +80,9 @@ class AppColors {
   static const Color successBg = Color(0xFFE3F6EA);
   static const Color success = Color(0xFF1FA463);
 
+  // Welcome screen
+  static const Color welcomeButton = Color(0xFF2B35D9);
+
   // Error / lockout colors
   static const Color error = Color(0xFFB42318);
   static const Color errorField = Color(0xFFE0524A);
@@ -127,7 +138,591 @@ class MyApp extends StatelessWidget {
           focusedBorder: outline(AppColors.navy, 1.3),
         ),
       ),
-      home: const LoginPage(),
+      home: const StartPage(),
+    );
+  }
+}
+
+// ============================================================
+// START PAGE
+//   Decides which screen opens first. Always the WelcomePage.
+// ============================================================
+
+class StartPage extends StatelessWidget {
+  const StartPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const WelcomePage();
+  }
+}
+
+// ============================================================
+// WELCOME PAGE
+//   First screen, drawn fully in code (no picture file needed):
+//   logo, headline, glowing ring with the "1E" badge and four
+//   cards (People, Applications, Security, Analytics), a footer
+//   line and the SIGN IN button.
+//   SIGN IN opens the login page.
+// ============================================================
+
+class _WelcomeColors {
+  static const Color background = Color(0xFF05070F);
+  static const Color card = Color(0xFF0C1226);
+  static const Color cardBorder = Color(0xFF22305F);
+  static const Color iconBox = Color(0xFF16224A);
+  static const Color blue = Color(0xFF3D6BFF);
+  static const Color blueSoft = Color(0xFF86A5FF);
+  static const Color white = Color(0xFFFFFFFF);
+  static const Color muted = Color(0xFFA9B3D6);
+  static const Color eyebrow = Color(0xFFB8C2FF);
+  static const Color line = Color(0xFF2C3868);
+}
+
+class WelcomePage extends StatelessWidget {
+  const WelcomePage({super.key});
+
+  void _openLogin(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const LoginPage()),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: _WelcomeColors.background,
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              child: Align(
+                alignment: Alignment.topCenter,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: 480,
+                    minHeight: constraints.maxHeight,
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // TOP: logo, small line, headline, dotted line
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  width: 30,
+                                  height: 30,
+                                  alignment: Alignment.center,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(8),
+                                    gradient: const LinearGradient(
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                      colors: [
+                                        Color(0xFF5B7CFF),
+                                        Color(0xFF2B35D9),
+                                      ],
+                                    ),
+                                  ),
+                                  child: const Icon(
+                                    Icons.layers_rounded,
+                                    size: 18,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                const Text(
+                                  'STACKLY',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: 3,
+                                    color: _WelcomeColors.white,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 18),
+                            const Text(
+                              'CLOUD PLATFORM · HRMS · CRM · ERP · FINANCE · AI',
+                              style: TextStyle(
+                                fontFamily: 'monospace',
+                                fontSize: 10,
+                                letterSpacing: 1.2,
+                                height: 1.5,
+                                color: _WelcomeColors.eyebrow,
+                              ),
+                            ),
+                            const SizedBox(height: 14),
+                            const Text.rich(
+                              TextSpan(
+                                children: [
+                                  TextSpan(
+                                    text: 'One identity.\n',
+                                    style: TextStyle(
+                                      color: _WelcomeColors.white,
+                                    ),
+                                  ),
+                                  TextSpan(
+                                    text: 'Infinite ',
+                                    style: TextStyle(
+                                      color: _WelcomeColors.blue,
+                                    ),
+                                  ),
+                                  TextSpan(
+                                    text: 'Potential.',
+                                    style: TextStyle(
+                                      color: _WelcomeColors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              style: TextStyle(
+                                fontSize: 34,
+                                fontWeight: FontWeight.w800,
+                                height: 1.15,
+                              ),
+                            ),
+                            const SizedBox(height: 18),
+                            const _DashedLine(),
+                          ],
+                        ),
+                      ),
+
+                      // MIDDLE: ring + badge + four cards
+                      const Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 12,
+                        ),
+                        child: AspectRatio(
+                          aspectRatio: 1.0,
+                          child: _WelcomeDiagram(),
+                        ),
+                      ),
+
+                      // BOTTOM: dotted line, footer, SIGN IN button
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            const _DashedLine(),
+                            const SizedBox(height: 14),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              mainAxisAlignment:
+                                  MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Container(
+                                        width: 28,
+                                        height: 2,
+                                        color: _WelcomeColors.blue,
+                                      ),
+                                      const SizedBox(height: 8),
+                                      const Text(
+                                        'Secure  ·  Scalable  ·  Future-Ready',
+                                        style: TextStyle(
+                                          fontFamily: 'monospace',
+                                          fontSize: 9.5,
+                                          letterSpacing: 0.5,
+                                          color: _WelcomeColors.muted,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                const Text(
+                                  'BUILT FOR\nA BRIGHTER\nTOMORROW',
+                                  textAlign: TextAlign.right,
+                                  style: TextStyle(
+                                    fontFamily: 'monospace',
+                                    fontSize: 8.5,
+                                    letterSpacing: 1.2,
+                                    height: 1.4,
+                                    color: _WelcomeColors.muted,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 18),
+                            DecoratedBox(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(12),
+                                boxShadow: const [
+                                  BoxShadow(
+                                    color: Color(0x663D6BFF),
+                                    blurRadius: 24,
+                                    offset: Offset(0, 8),
+                                  ),
+                                ],
+                              ),
+                              child: SizedBox(
+                                height: 54,
+                                child: ElevatedButton(
+                                  onPressed: () => _openLogin(context),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppColors.welcomeButton,
+                                    foregroundColor: Colors.white,
+                                    elevation: 0,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  child: const Text(
+                                    'SIGN IN',
+                                    style: TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w800,
+                                      letterSpacing: 1.5,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+// ------------------------------------------------------------
+// DASHED LINE (blue dotted divider)
+// ------------------------------------------------------------
+
+class _DashedLine extends StatelessWidget {
+  const _DashedLine();
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      height: 2,
+      child: CustomPaint(
+        painter: _DashedLinePainter(_WelcomeColors.blue),
+      ),
+    );
+  }
+}
+
+class _DashedLinePainter extends CustomPainter {
+  final Color color;
+
+  const _DashedLinePainter(this.color);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final Paint paint = Paint()
+      ..color = color
+      ..strokeWidth = 2;
+    double x = 0;
+    while (x < size.width) {
+      canvas.drawLine(
+        Offset(x, size.height / 2),
+        Offset(x + 3, size.height / 2),
+        paint,
+      );
+      x += 7;
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _DashedLinePainter oldDelegate) {
+    return oldDelegate.color != color;
+  }
+}
+
+// ------------------------------------------------------------
+// DIAGRAM (glowing ring, "1E" badge, four cards)
+// ------------------------------------------------------------
+
+class _WelcomeDiagram extends StatelessWidget {
+  const _WelcomeDiagram();
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final double w = constraints.maxWidth;
+        final double h = constraints.maxHeight;
+        final double cardW = w * 0.44;
+        const double cardH = 70;
+        final double topY = h * 0.07;
+        final double bottomY = h - cardH - h * 0.07;
+        final double ringRadius = w * 0.30;
+
+        return Stack(
+          children: [
+            // RING, GLOW AND LINES
+            Positioned.fill(
+              child: CustomPaint(
+                painter: _DiagramPainter(
+                  cardW: cardW,
+                  cardH: cardH,
+                  topY: topY,
+                  bottomY: bottomY,
+                  ringRadius: ringRadius,
+                ),
+              ),
+            ),
+
+            // TOP LEFT CARD
+            Positioned(
+              left: 0,
+              top: topY,
+              width: cardW,
+              height: cardH,
+              child: const _InfoCard(
+                icon: Icons.groups_outlined,
+                title: 'People',
+                subtitle: 'Manage users & teams',
+              ),
+            ),
+
+            // TOP RIGHT CARD
+            Positioned(
+              right: 0,
+              top: topY,
+              width: cardW,
+              height: cardH,
+              child: const _InfoCard(
+                icon: Icons.apps_rounded,
+                title: 'Applications',
+                subtitle: 'Integrate & manage',
+              ),
+            ),
+
+            // BOTTOM LEFT CARD
+            Positioned(
+              left: 0,
+              top: bottomY,
+              width: cardW,
+              height: cardH,
+              child: const _InfoCard(
+                icon: Icons.shield_outlined,
+                title: 'Security',
+                subtitle: 'Protect every access',
+              ),
+            ),
+
+            // BOTTOM RIGHT CARD
+            Positioned(
+              right: 0,
+              top: bottomY,
+              width: cardW,
+              height: cardH,
+              child: const _InfoCard(
+                icon: Icons.bar_chart_rounded,
+                title: 'Analytics',
+                subtitle: 'Turn data into insights',
+              ),
+            ),
+
+            // CENTER "1E" BADGE
+            Positioned(
+              left: w / 2 - 32,
+              top: h / 2 - 32,
+              width: 64,
+              height: 64,
+              child: Container(
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: _WelcomeColors.blueSoft,
+                    width: 1.5,
+                  ),
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Color(0xFF1B2A66), Color(0xFF0A1030)],
+                  ),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x883D6BFF),
+                      blurRadius: 24,
+                    ),
+                  ],
+                ),
+                child: const Text(
+                  '1E',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w800,
+                    color: _WelcomeColors.white,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _DiagramPainter extends CustomPainter {
+  final double cardW;
+  final double cardH;
+  final double topY;
+  final double bottomY;
+  final double ringRadius;
+
+  const _DiagramPainter({
+    required this.cardW,
+    required this.cardH,
+    required this.topY,
+    required this.bottomY,
+    required this.ringRadius,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final Offset center = Offset(size.width / 2, size.height / 2);
+
+    // SOFT BLUE GLOW BEHIND THE RING
+    final double glowRadius = ringRadius * 1.5;
+    final Paint glowPaint = Paint()
+      ..shader = const RadialGradient(
+        colors: [Color(0x403D6BFF), Color(0x00000000)],
+      ).createShader(Rect.fromCircle(center: center, radius: glowRadius));
+    canvas.drawCircle(center, glowRadius, glowPaint);
+
+    // LINES FROM THE CENTER TO EACH CARD
+    final Paint linePaint = Paint()
+      ..color = _WelcomeColors.line
+      ..strokeWidth = 1.3
+      ..style = PaintingStyle.stroke;
+
+    final List<Offset> targets = [
+      Offset(cardW, topY + cardH / 2),
+      Offset(size.width - cardW, topY + cardH / 2),
+      Offset(cardW, bottomY + cardH / 2),
+      Offset(size.width - cardW, bottomY + cardH / 2),
+    ];
+    for (final Offset target in targets) {
+      canvas.drawLine(center, target, linePaint);
+    }
+
+    // RING GLOW
+    final Paint ringGlow = Paint()
+      ..color = const Color(0x773D6BFF)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 12
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10);
+    canvas.drawCircle(center, ringRadius, ringGlow);
+
+    // RING
+    final Paint ring = Paint()
+      ..color = _WelcomeColors.blueSoft
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.5;
+    canvas.drawCircle(center, ringRadius, ring);
+
+    // THIN INNER RING
+    final Paint innerRing = Paint()
+      ..color = const Color(0x553D6BFF)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1;
+    canvas.drawCircle(center, ringRadius * 0.82, innerRing);
+  }
+
+  @override
+  bool shouldRepaint(covariant _DiagramPainter oldDelegate) {
+    return oldDelegate.cardW != cardW ||
+        oldDelegate.cardH != cardH ||
+        oldDelegate.topY != topY ||
+        oldDelegate.bottomY != bottomY ||
+        oldDelegate.ringRadius != ringRadius;
+  }
+}
+
+class _InfoCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+
+  const _InfoCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: _WelcomeColors.card,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: _WelcomeColors.cardBorder),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 30,
+            height: 30,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: _WelcomeColors.iconBox,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, size: 17, color: _WelcomeColors.blueSoft),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: _WelcomeColors.white,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 9.5,
+                    height: 1.3,
+                    color: _WelcomeColors.muted,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
